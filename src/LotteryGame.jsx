@@ -22,7 +22,6 @@ const LotteryGame = () => {
       setChances(storedChances);
     }
 
-    // Check if an hour has passed since the last reset
     if (lastResetTime) {
       const currentTime = new Date().getTime();
       const timeDifference = currentTime - lastResetTime;
@@ -41,21 +40,29 @@ const LotteryGame = () => {
   }, []);
 
   useEffect(() => {
-    if (chances === 0 && timeLeft > 0) {
+    if (chances === 0 && timeLeft === null) {
+      const currentTime = new Date().getTime();
+      const nextReset = currentTime + 3600000;
+      localStorage.setItem("lastResetTime", JSON.stringify(nextReset));
+      setTimeLeft(3600000);
+    }
+  }, [chances]);
+
+  useEffect(() => {
+    if (timeLeft !== null && timeLeft > 0) {
       const timer = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1000) {
             clearInterval(timer);
             resetChances();
-            return 0;
+            return null;
           }
           return prev - 1000;
         });
       }, 1000);
-
       return () => clearInterval(timer);
     }
-  }, [chances, timeLeft]);
+  }, [timeLeft]);
 
   const resetChances = () => {
     setChances(5);
@@ -141,7 +148,7 @@ const LotteryGame = () => {
         {chances > 0 ? "Get new Ticket" : "No More Chances"}
       </button>
 
-      {chances === 0 && timeLeft > 0 && (
+      {chances === 0 && timeLeft !== null && (
         <h3>New chances in: {formatTime(timeLeft)}</h3>
       )}
 
